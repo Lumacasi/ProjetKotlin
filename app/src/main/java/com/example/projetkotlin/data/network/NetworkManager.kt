@@ -1,42 +1,40 @@
 package com.example.projetkotlin.data.network
 
+import android.util.Log
 import com.example.projetkotlin.utils.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.labo.protocole.traitement.LOGIN.ReponseLOGIN
-import org.labo.protocole.traitement.LOGIN.RequeteLOGIN
+import org.example.consultation.cap.requests.LoginRequest
+import org.example.consultation.cap.responses.LoginResponse
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.net.Socket
 
 class NetworkManager {
-    // Cette fonction doit s'appeler exactement sendLogin
-    suspend fun sendLogin(login: String, pass: String): ReponseLOGIN? {
+
+    suspend fun sendLogin(login: String, pass: String): LoginResponse? {
         return withContext(Dispatchers.IO) {
             var socket: Socket? = null
             try {
+                // Utilise l'IP de ton PC (10.0.2.2 pour l'émulateur) et le port du serveur
                 socket = Socket(Constants.SERVER_IP, Constants.SERVER_PORT)
-                // Timeout de 5 secondes pour éviter que l'UI ne reste figée en cas de souci réseau
-                socket.soTimeout = 5000
 
-                // 1. CRÉER LE FLUX DE SORTIE EN PREMIER
                 val oos = ObjectOutputStream(socket.getOutputStream())
-                // 2. FLUSH IMMÉDIAT : Envoie le header pour débloquer le 'new ObjectInputStream' du serveur
                 oos.flush()
-
-                // 3. CRÉER LE FLUX D'ENTRÉE APRÈS
                 val ois = ObjectInputStream(socket.getInputStream())
 
-                // 4. ENVOI DE LA REQUÊTE
-                val requete = RequeteLOGIN(login, pass)
+                // Création de la requête selon le nouveau modèle du pote
+                val requete = LoginRequest(login, pass)
                 oos.writeObject(requete)
                 oos.flush()
 
-                // 5. RÉCEPTION DE LA RÉPONSE
-                return@withContext ois.readObject() as? ReponseLOGIN
+                // Lecture de la réponse (LoginResponse)
+                val response = ois.readObject() as? LoginResponse
+                return@withContext response
+
             } catch (e: Exception) {
-                e.printStackTrace()
-                return@withContext ReponseLOGIN(false, "Erreur détaillée: ${e.javaClass.simpleName} - ${e.message}", null)
+                Log.e("NETWORK", "Erreur: ${e.message}")
+                null
             } finally {
                 socket?.close()
             }

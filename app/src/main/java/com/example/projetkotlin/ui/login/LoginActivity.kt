@@ -2,6 +2,7 @@ package com.example.projetkotlin.ui.login
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,8 +18,8 @@ import com.example.projetkotlin.data.network.NetworkManager
 import com.example.projetkotlin.ui.consultation.ConsultationActivity
 import com.example.projetkotlin.utils.Constants
 import kotlinx.coroutines.launch
-import org.labo.protocole.traitement.LOGIN.ReponseLOGIN
-import org.labo.protocole.traitement.LOGIN.RequeteLOGIN
+import org.example.consultation.cap.responses.*
+import org.example.consultation.cap.requests.*
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,30 +84,29 @@ fun LoginScreen() {
                 onClick = {
                     if (isLoading) return@Button
 
-                    println("DEBUG LOGIN: Nom d'utilisateur saisi = '$username'")
-                    println("DEBUG LOGIN: Mot de passe saisi = '$password'")
+                    println("DEBUG LOGIN: Saisie = '$username' / '$password'")
 
                     isLoading = true
                     statusMessage = "Connexion..."
 
-
+                    val networkManager = NetworkManager()
 
                     scope.launch {
-                        // Appel au NetworkManager avec les objets
-                        // Assurez-vous que la méthode dans NetworkManager s'appelle bien sendLoginRequest
-                        val reponse = NetworkManager().sendLogin(username, password)
+                        // ICI : On utilise bien 'username' et 'password' que tu as défini plus haut
+                        val response = networkManager.sendLogin(username, password)
 
-                        isLoading = false
-
-                        if (reponse is ReponseLOGIN) { // Le "is" déclenche le Smart Cast en Kotlin
-                            if (reponse.Valide) { // Maintenant .Valide n'est plus en rouge
-                                statusMessage = "Connexion réussie !"
-                                context.startActivity(Intent(context, ConsultationActivity::class.java))
+                        isLoading = false // On arrête le chargement
+                        if (response != null) {
+                            // On utilise .success car c'est le champ du nouveau serveur
+                            if (response.success) {
+                                Log.d("LOGIN", "Succès ! Token : ${response.token}")
+                                val intent = Intent(context, ConsultationActivity::class.java)
+                                context.startActivity(intent)
                             } else {
                                 statusMessage = "Identifiants incorrects"
                             }
                         } else {
-                            statusMessage = "Erreur de communication avec le serveur"
+                            statusMessage = "Erreur de connexion au serveur"
                         }
                     }
                 },
