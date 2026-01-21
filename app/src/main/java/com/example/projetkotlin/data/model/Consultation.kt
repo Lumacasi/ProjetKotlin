@@ -1,5 +1,18 @@
-package com.example.projetkotlin.data.model
+package org.example.consultation.dal.entity
 
-class
-Consultation {
+import java.io.Serializable
+import java.time.LocalDate
+import java.time.LocalTime
+
+class Consultation(
+    var id: Int? = null,
+    var doctor: Any? = null, // Tu peux remplacer Any par Doctor si tu as la classe
+    var patient: Patient? = null,
+    var date: LocalDate? = null,
+    var hour: LocalTime? = null,
+    var reason: String? = null
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }

@@ -9,6 +9,9 @@ import org.example.consultation.cap.responses.LoginResponse
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.net.Socket
+import org.example.consultation.cap.requests.SearchConsultationsRequest
+import org.example.consultation.cap.responses.SearchConsultationsResponse
+import org.example.consultation.dal.entity.Consultation
 
 class NetworkManager {
 
@@ -36,6 +39,34 @@ class NetworkManager {
                 Log.e("NETWORK", "Erreur: ${e.message}")
                 null
             } finally {
+                socket?.close()
+            }
+        }
+    }
+
+    suspend fun getConsultations(doctorId: Int?): List<Consultation> {
+        return withContext(Dispatchers.IO) {
+            var socket: Socket? = null
+            try {
+                // 1. Nouvelle connexion pour cette requête précise
+                socket = Socket(Constants.SERVER_IP, Constants.SERVER_PORT)
+                val oos = ObjectOutputStream(socket.getOutputStream())
+
+                // 2. Envoi de la requête de recherche
+                val request = SearchConsultationsRequest(doctorId, null, null)
+                oos.writeObject(request)
+                oos.flush()
+
+                // 3. Lecture de la réponse
+                val ois = ObjectInputStream(socket.getInputStream())
+                val response = ois.readObject() as? SearchConsultationsResponse
+
+                response?.consultations ?: emptyList()
+            } catch (e: Exception) {
+                Log.e("CAP_PROT", "Erreur lors de SEARCH_CONSULTATIONS: ${e.message}")
+                emptyList()
+            } finally {
+                // 4. On ferme toujours, car le serveur de requêtes l'a déjà fait ou l'attend
                 socket?.close()
             }
         }

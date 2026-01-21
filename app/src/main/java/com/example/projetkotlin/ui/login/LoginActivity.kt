@@ -1,50 +1,37 @@
 package com.example.projetkotlin.ui.login
 
 import android.content.Intent
-import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.projetkotlin.R
 import com.example.projetkotlin.data.network.NetworkManager
-import com.example.projetkotlin.ui.consultation.ConsultationActivity
-import com.example.projetkotlin.utils.Constants
 import kotlinx.coroutines.launch
-import org.example.consultation.cap.responses.*
-import org.example.consultation.cap.requests.*
-
-class LoginActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                LoginScreen()
-            }
-        }
-    }
-}
+import android.app.Activity
+import com.example.projetkotlin.ui.consultation.ConsultationActivity
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(onLoginSuccess: (String) -> Unit) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope() // Pour lancer des tâches asynchrones
+    val scope = rememberCoroutineScope()
+    val networkManager = remember { NetworkManager() }
 
-    var username by remember { mutableStateOf("Medecin1") }
-    var password by remember { mutableStateOf("1234") }
+    // États du formulaire
+    var username by remember { mutableStateOf("Alice") }
+    var password by remember { mutableStateOf("Dupont") }
     var statusMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = androidx.compose.ui.graphics.Color.White // Fond blanc fixe
+        color = Color.White
     ) {
         Column(
             modifier = Modifier
@@ -54,78 +41,94 @@ fun LoginScreen() {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Connexion Hôpital (SSL)",
+                text = stringResource(R.string.title_login),
                 style = MaterialTheme.typography.headlineMedium,
-                color = androidx.compose.ui.graphics.Color.Black // Texte noir fixe
+                color = Color.Black
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Champ Utilisateur (Prénom pour ton test SQL)
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Nom d'utilisateur") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text(stringResource(R.string.label_username)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Champ Mot de passe (Nom pour ton test SQL)
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Mot de passe") },
+                label = { Text(stringResource(R.string.label_password)) },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Bouton de connexion
             Button(
                 onClick = {
-                    if (isLoading) return@Button
-
-                    println("DEBUG LOGIN: Saisie = '$username' / '$password'")
+                    if (username.isBlank() || password.isBlank()) {
+                        statusMessage = context.getString(R.string.login_error)
+                        return@Button
+                    }
 
                     isLoading = true
-                    statusMessage = "Connexion..."
-
-                    val networkManager = NetworkManager()
+                    statusMessage = context.getString(R.string.status_connecting)
 
                     scope.launch {
-                        // ICI : On utilise bien 'username' et 'password' que tu as défini plus haut
-                        val response = networkManager.sendLogin(username, password)
+                        try {
+                            val response = networkManager.sendLogin(username, password)
 
-                        isLoading = false // On arrête le chargement
-                        if (response != null) {
-                            // On utilise .success car c'est le champ du nouveau serveur
-                            if (response.success) {
-                                Log.d("LOGIN", "Succès ! Token : ${response.token}")
+                            isLoading = false
+                            if (response != null && response.success) {
+                                val connectedDoctorId = response.getDoctor().getId() // On récupère l'ID
+
+                                // On le passe à l'activité suivante via l'Intent
                                 val intent = Intent(context, ConsultationActivity::class.java)
+                                intent.putExtra("DOCTOR_ID", connectedDoctorId)
                                 context.startActivity(intent)
                             } else {
-                                statusMessage = "Identifiants incorrects"
+                                statusMessage = context.getString(R.string.login_error)
                             }
-                        } else {
-                            statusMessage = "Erreur de connexion au serveur"
+                        } catch (e: Exception) {
+                            isLoading = false
+                            statusMessage = "Erreur réseau : ${e.localizedMessage}"
                         }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
+                enabled = !isLoading,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(24.dp)
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Se connecter")
+                    Text(stringResource(R.string.btn_login))
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = statusMessage, color = androidx.compose.ui.graphics.Color.Black)
+            // Message de statut (Erreur ou Succès)
+            Text(
+                text = statusMessage,
+                color = if (statusMessage.contains("réussie") || statusMessage.contains("successful"))
+                    Color(0xFF4CAF50) else Color.Red,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
