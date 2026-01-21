@@ -4,18 +4,13 @@ import android.util.Log
 import com.example.projetkotlin.utils.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.example.consultation.cap.requests.LoginRequest
-import org.example.consultation.cap.requests.SearchConsultationsRequest
-import org.example.consultation.cap.responses.LoginResponse
-import org.example.consultation.cap.responses.SearchConsultationsResponse
 import org.example.consultation.dal.entity.Consultation
 import org.example.consultation.dal.entity.Patient
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.net.Socket
-import org.example.consultation.cap.requests.AddConsultationRequest
-import org.example.consultation.cap.requests.GetPatientsRequest
-import org.example.consultation.cap.responses.GetPatientsResponse
+import org.example.consultation.cap.requests.*
+import org.example.consultation.cap.responses.*
 
 
 class NetworkManager {
@@ -72,29 +67,6 @@ class NetworkManager {
         }
     }
 
-    // AJOUT : Pour la suite "ADD_CONSULTATION"
-    suspend fun addConsultations(request: AddConsultationRequest): Boolean {        return withContext(Dispatchers.IO) {
-            var socket: Socket? = null
-            try {
-                socket = Socket(Constants.SERVER_IP, Constants.SERVER_PORT)
-                val oos = ObjectOutputStream(socket.getOutputStream())
-                oos.flush()
-
-                oos.writeObject(request)
-                oos.flush()
-
-                val ois = ObjectInputStream(socket.getInputStream())
-                // Le serveur répond par un Boolean selon ton protocole
-                ois.readObject() as Boolean
-            } catch (e: Exception) {
-                Log.e("CAP_PROT", "Erreur lors de ADD_CONSULTATION: ${e.message}")
-                false
-            } finally {
-                socket?.close()
-            }
-        }
-    }
-
     suspend fun getAllPatients(): List<Patient> {
         return withContext(Dispatchers.IO) {
             var socket: Socket? = null
@@ -113,6 +85,77 @@ class NetworkManager {
             } catch (e: Exception) {
                 Log.e("NETWORK", "Erreur GetPatients: ${e.message}")
                 emptyList()
+            } finally {
+                socket?.close()
+            }
+        }
+    }
+
+    suspend fun addConsultations(request: AddConsultationRequest): AddConsultationResponse? {
+        return withContext(Dispatchers.IO) {
+            var socket: Socket? = null
+            try {
+                socket = Socket(Constants.SERVER_IP, Constants.SERVER_PORT)
+                val oos = ObjectOutputStream(socket.getOutputStream())
+                oos.flush()
+
+                oos.writeObject(request)
+                oos.flush()
+
+                val ois = ObjectInputStream(socket.getInputStream())
+                // On lit l'objet réponse complet envoyé par le CapProtocole.java
+                ois.readObject() as? AddConsultationResponse
+            } catch (e: Exception) {
+                Log.e("NETWORK", "Erreur AddConsultation: ${e.message}")
+                null
+            } finally {
+                socket?.close()
+            }
+        }
+    }
+
+    suspend fun deleteConsultation(id: Int): Boolean {
+        return withContext(Dispatchers.IO) {
+            var socket: Socket? = null
+            try {
+                socket = Socket(Constants.SERVER_IP, Constants.SERVER_PORT)
+                val oos = ObjectOutputStream(socket.getOutputStream())
+                oos.flush()
+
+                // On envoie la requête (Vérifie bien que le nom correspond : DeleteConsultationRequest)
+                oos.writeObject(org.example.consultation.cap.requests.DeleteConsultationRequest(id))
+                oos.flush()
+
+                // LECTURE DE LA RÉPONSE (Indispensable !)
+                val ois = ObjectInputStream(socket.getInputStream())
+                val response = ois.readObject() as? org.example.consultation.cap.responses.DeleteConsultationResponse
+
+                response?.success ?: false
+            } catch (e: Exception) {
+                Log.e("NETWORK", "Erreur Delete: ${e.message}")
+                false
+            } finally {
+                socket?.close()
+            }
+        }
+    }
+
+    suspend fun updateConsultation(request: UpdateConsultationRequest): Boolean {
+        return withContext(Dispatchers.IO) {
+            var socket: Socket? = null
+            try {
+                socket = Socket(Constants.SERVER_IP, Constants.SERVER_PORT)
+                val oos = ObjectOutputStream(socket.getOutputStream())
+                oos.flush()
+                oos.writeObject(request)
+                oos.flush()
+
+                val ois = ObjectInputStream(socket.getInputStream())
+                val response = ois.readObject() as? org.example.consultation.cap.responses.UpdateConsultationResponse
+                response?.success ?: false
+            } catch (e: Exception) {
+                Log.e("NETWORK", "Update error: ${e.message}")
+                false
             } finally {
                 socket?.close()
             }

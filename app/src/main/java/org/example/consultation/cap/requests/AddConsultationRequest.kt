@@ -8,10 +8,11 @@ class AddConsultationRequest(
     val doctorId: Int,
     val date: LocalDate,
     val startTime: LocalTime,
-    val durationMinutes: Int,
-    val count: Int
+    val durationBetween: Int, // Durée de chaque créneau (ex: 30)
+    val count: Int,           // Nombre de créneaux à créer
+    val reason: String? = null
 ) : Serializable {
     companion object {
-        private const val serialVersionUID: Long = 1L // Doit être identique au serveur
+        private const val serialVersionUID: Long = 1L
     }
 }
