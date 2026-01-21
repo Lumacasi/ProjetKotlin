@@ -3,10 +3,12 @@ package com.example.projetkotlin
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.projetkotlin.ui.login.LoginScreen
 import com.example.projetkotlin.ui.consultation.ConsultationScreen
 
@@ -14,19 +16,24 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            // Création du contrôleur de navigation
             val navController = rememberNavController()
 
             NavHost(navController = navController, startDestination = "login") {
+                // Écran de Login
                 composable("login") {
-                    LoginScreen(onLoginSuccess = {
-                        navController.navigate("consultations")
-                        // En retirant popUpTo, le bouton "retour" système reviendra au login
+                    LoginScreen(onLoginSuccess = { doctorId ->
+                        // On navigue vers les consultations en passant l'ID dans l'URL
+                        navController.navigate("consultations/$doctorId")
                     })
                 }
-                // Suppression de /{doctorName} dans la route
-                composable("consultations") {
-                    ConsultationScreen()
+
+                // Écran des Consultations avec paramètre ID
+                composable(
+                    route = "consultations/{doctorId}",
+                    arguments = listOf(navArgument("doctorId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val doctorId = backStackEntry.arguments?.getInt("doctorId") ?: -1
+                    ConsultationScreen(doctorId = doctorId)
                 }
             }
         }

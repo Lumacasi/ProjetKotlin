@@ -90,12 +90,13 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
 
                             isLoading = false
                             if (response != null && response.success) {
-                                val connectedDoctorId = response.getDoctor().getId() // On récupère l'ID
-
-                                // On le passe à l'activité suivante via l'Intent
-                                val intent = Intent(context, ConsultationActivity::class.java)
-                                intent.putExtra("DOCTOR_ID", connectedDoctorId)
+                                val intent = Intent(context, ConsultationActivity::class.java).apply {
+                                    // Extraction sécurisée de l'ID du docteur
+                                    val id = response.doctor?.id ?: -1
+                                    putExtra("DOCTOR_ID", id)
+                                }
                                 context.startActivity(intent)
+                                // Pas de finish() pour garder le retour arrière fonctionnel
                             } else {
                                 statusMessage = context.getString(R.string.login_error)
                             }

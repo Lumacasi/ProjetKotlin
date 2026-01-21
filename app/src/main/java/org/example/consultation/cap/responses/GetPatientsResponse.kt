@@ -1,12 +1,11 @@
 package org.example.consultation.cap.responses
 
-import org.example.consultation.dal.entity.Doctor
+import org.example.consultation.dal.entity.Patient
 import java.io.Serializable
 
-class LoginResponse(
+class GetPatientsResponse(
     val success: Boolean = false,
-    val message: String? = null,
-    val doctor: Doctor? = null
+    val patients: List<Patient> = emptyList() // C'est cette ligne qui règle l'erreur 'Unresolved reference patients'
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
