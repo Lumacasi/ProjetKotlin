@@ -9,7 +9,7 @@ class UpdateConsultationRequest(
     val date: LocalDate,
     val time: LocalTime,
     val reason: String?,
-    val patientId: Int? // null si on veut libérer la place
+    val patientId: Int?
 ) : Serializable {
     companion object { private const val serialVersionUID = 1L }
 }

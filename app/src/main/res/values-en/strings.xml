@@ -4,8 +4,34 @@
     <string name="label_username">Username</string>
     <string name="label_password">Password</string>
     <string name="btn_login">Login</string>
-
     <string name="status_connecting">Connecting to server...</string>
     <string name="login_success">Login successful!</string>
     <string name="login_error">Invalid credentials or server unreachable.</string>
+
+    <string name="title_consultations">My Consultations</string>
+    <string name="btn_date">Date</string>
+    <string name="btn_patient">Patient</string>
+    <string name="btn_all">All</string>
+    <string name="label_planifier">Schedule</string>
+    <string name="label_modifier">Edit</string>
+    <string name="label_supprimer">Delete</string>
+    <string name="label_heure">Time</string>
+    <string name="label_motif">Reason</string>
+    <string name="label_motif_complet">Full reason</string>
+    <string name="label_aucun_motif">No reason specified.</string>
+    <string name="label_nombre">Count</string>
+    <string name="label_duree">Duration (min)</string>
+    <string name="label_generer">Generate</string>
+    <string name="label_enregistrer">Save</string>
+    <string name="label_choisir">Change</string>
+    <string name="label_choisir_patient">Choose Patient</string>
+    <string name="label_filtrer_patient">Filter Patient</string>
+    <string name="label_liberer">Release</string>
+    <string name="label_fermer">Close</string>
+    <string name="status_libre">FREE</string>
+    <string name="msg_select_line">Please select a row</string>
+    <string name="error_delete_patient">Cannot delete: a patient is already assigned</string>
+    <string name="dialog_delete_title">Delete?</string>
+    <string name="dialog_delete_confirm">Delete slot from</string>
+    <string name="dialog_details_title">Consultation Details</string>
 </resources>

@@ -5,7 +5,7 @@ import java.io.Serializable
 
 class GetPatientsResponse(
     val success: Boolean = false,
-    val patients: List<Patient> = emptyList() // C'est cette ligne qui règle l'erreur 'Unresolved reference patients'
+    val patients: List<Patient> = emptyList()
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L

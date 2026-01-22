@@ -24,8 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.projetkotlin.R
 import com.example.projetkotlin.data.network.NetworkManager
 import kotlinx.coroutines.launch
 import org.example.consultation.cap.requests.AddConsultationRequest
@@ -58,26 +60,22 @@ fun ConsultationScreen(doctorId: Int) {
     val scope = rememberCoroutineScope()
     val networkManager = remember { NetworkManager() }
 
-    // États pour les filtres et données
     var selectedPatient by remember { mutableStateOf<Patient?>(null) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var consultations by remember { mutableStateOf<List<Consultation>>(emptyList()) }
     var patients by remember { mutableStateOf<List<Patient>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // États pour les dialogues
     var showPatientDialog by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // États pour le formulaire d'ajout (Planification)
     var addDate by remember { mutableStateOf(LocalDate.now()) }
     var addStartTime by remember { mutableStateOf(LocalTime.of(9, 0)) }
     var addCount by remember { mutableStateOf("4") }
     var addDuration by remember { mutableStateOf("30") }
 
-    // États pour la sélection et l'édition
     var selectedConsultation by remember { mutableStateOf<Consultation?>(null) }
     var editDate by remember { mutableStateOf(LocalDate.now()) }
     var editTime by remember { mutableStateOf(LocalTime.now()) }
@@ -85,7 +83,6 @@ fun ConsultationScreen(doctorId: Int) {
     var editPatient by remember { mutableStateOf<Patient?>(null) }
     var showEditPatientSelection by remember { mutableStateOf(false) }
 
-    // Pickers
     val addDatePickerDialog = DatePickerDialog(context, { _, y, m, d -> addDate = LocalDate.of(y, m + 1, d) }, addDate.year, addDate.monthValue - 1, addDate.dayOfMonth)
     val addTimePickerDialog = TimePickerDialog(context, { _, h, min -> addStartTime = LocalTime.of(h, min) }, addStartTime.hour, addStartTime.minute, true)
     val editDatePickerDialog = DatePickerDialog(context, { _, y, m, d -> editDate = LocalDate.of(y, m + 1, d) }, editDate.year, editDate.monthValue - 1, editDate.dayOfMonth)
@@ -121,48 +118,43 @@ fun ConsultationScreen(doctorId: Int) {
                 containerColor = Color(0xFF6200EE),
                 contentColor = Color.White
             ) {
-                // Utilisation d'une Row pour répartir l'espace
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // BOUTON AJOUTER (1/3 de la largeur)
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                         IconButton(onClick = { showAddDialog = true }) {
-                            Icon(Icons.Default.Add, contentDescription = "Planifier", tint = Color.White)
+                            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.label_planifier), tint = Color.White)
                         }
                     }
 
-                    // BOUTON MODIFIER (1/3 de la largeur)
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                         IconButton(onClick = {
                             if (selectedConsultation != null) {
                                 showEditDialog = true
                             } else {
-                                Toast.makeText(context, "Sélectionnez une ligne", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.msg_select_line), Toast.LENGTH_SHORT).show()
                             }
                         }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Modifier", tint = Color.White)
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.label_modifier), tint = Color.White)
                         }
                     }
 
-                    // BOUTON SUPPRIMER (1/3 de la largeur)
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                         IconButton(onClick = {
                             val consultation = selectedConsultation
                             if (consultation == null) {
-                                Toast.makeText(context, "Sélectionnez une ligne", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.msg_select_line), Toast.LENGTH_SHORT).show()
                             }
-                            // CONDITION DE BLOCAGE : Si un patient est assigné
                             else if (consultation.patient != null) {
-                                Toast.makeText(context, "Impossible de supprimer : un patient est déjà assigné", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, context.getString(R.string.error_delete_patient), Toast.LENGTH_LONG).show()
                             }
                             else {
                                 showDeleteDialog = true
                             }
                         }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Supprimer", tint = Color.White)
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.label_supprimer), tint = Color.White)
                         }
                     }
                 }
@@ -170,14 +162,14 @@ fun ConsultationScreen(doctorId: Int) {
         }
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
-            Text("Mes Consultations", style = MaterialTheme.typography.headlineMedium)
+            Text(stringResource(R.string.title_consultations), style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { filterDatePickerDialog.show() }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = if (selectedDate != null) Color(0xFFE3F2FD) else Color(0xFF6200EE), contentColor = if (selectedDate != null) Color.Black else Color.White)) {
-                    Text(selectedDate?.toString() ?: "Date")
+                    Text(selectedDate?.toString() ?: stringResource(R.string.btn_date))
                 }
                 Button(onClick = { showPatientDialog = true }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = if (selectedPatient != null) Color(0xFFE3F2FD) else Color(0xFF6200EE), contentColor = if (selectedPatient != null) Color.Black else Color.White)) {
-                    Text(selectedPatient?.lastName ?: "Patient")
+                    Text(selectedPatient?.lastName ?: stringResource(R.string.btn_patient))
                 }
                 if (selectedDate != null || selectedPatient != null) {
                     IconButton(onClick = { selectedDate = null; selectedPatient = null }) { Icon(Icons.Default.Clear, "Reset", tint = Color.Red) }
@@ -194,7 +186,7 @@ fun ConsultationScreen(doctorId: Int) {
                             isSelected = selectedConsultation?.id == item.id,
                             onSelect = { selectedConsultation = if (selectedConsultation?.id == item.id) null else item },
                             onLongClick = {
-                                selectedConsultation = item // On le sélectionne aussi par confort
+                                selectedConsultation = item
                                 showDetailsDialog = true
                             }
                         )
@@ -203,15 +195,13 @@ fun ConsultationScreen(doctorId: Int) {
             }
         }
 
-        // --- DIALOGUES ---
-
         if (showAddDialog) {
-            AlertDialog(onDismissRequest = { showAddDialog = false }, title = { Text("Planifier") }, text = {
+            AlertDialog(onDismissRequest = { showAddDialog = false }, title = { Text(stringResource(R.string.label_planifier)) }, text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { addDatePickerDialog.show() }, modifier = Modifier.fillMaxWidth()) { Text("Date : $addDate") }
-                    OutlinedButton(onClick = { addTimePickerDialog.show() }, modifier = Modifier.fillMaxWidth()) { Text("Heure : $addStartTime") }
-                    OutlinedTextField(value = addCount, onValueChange = { addCount = it }, label = { Text("Nombre") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                    OutlinedTextField(value = addDuration, onValueChange = { addDuration = it }, label = { Text("Durée (min)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                    OutlinedButton(onClick = { addDatePickerDialog.show() }, modifier = Modifier.fillMaxWidth()) { Text("${stringResource(R.string.btn_date)} : $addDate") }
+                    OutlinedButton(onClick = { addTimePickerDialog.show() }, modifier = Modifier.fillMaxWidth()) { Text("${stringResource(R.string.label_heure)} : $addStartTime") }
+                    OutlinedTextField(value = addCount, onValueChange = { addCount = it }, label = { Text(stringResource(R.string.label_nombre)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                    OutlinedTextField(value = addDuration, onValueChange = { addDuration = it }, label = { Text(stringResource(R.string.label_duree)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 }
             }, confirmButton = {
                 Button(onClick = {
@@ -220,20 +210,20 @@ fun ConsultationScreen(doctorId: Int) {
                         if (resp?.success == true) { showAddDialog = false; refreshData() }
                         else Toast.makeText(context, resp?.message ?: "Erreur", Toast.LENGTH_LONG).show()
                     }
-                }) { Text("Générer") }
+                }) { Text(stringResource(R.string.label_generer)) }
             })
         }
 
         if (showEditDialog && selectedConsultation != null) {
-            AlertDialog(onDismissRequest = { showEditDialog = false }, title = { Text("Modifier") }, text = {
+            AlertDialog(onDismissRequest = { showEditDialog = false }, title = { Text(stringResource(R.string.label_modifier)) }, text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { editDatePickerDialog.show() }, modifier = Modifier.fillMaxWidth()) { Text("Date : $editDate") }
-                    OutlinedButton(onClick = { editTimePickerDialog.show() }, modifier = Modifier.fillMaxWidth()) { Text("Heure : $editTime") }
-                    OutlinedTextField(value = editReason, onValueChange = { editReason = it }, label = { Text("Motif") }, modifier = Modifier.fillMaxWidth())
-                    Text("Patient : ${editPatient?.let { "${it.firstName} ${it.lastName}" } ?: "LIBRE"}")
+                    OutlinedButton(onClick = { editDatePickerDialog.show() }, modifier = Modifier.fillMaxWidth()) { Text("${stringResource(R.string.btn_date)} : $editDate") }
+                    OutlinedButton(onClick = { editTimePickerDialog.show() }, modifier = Modifier.fillMaxWidth()) { Text("${stringResource(R.string.label_heure)} : $editTime") }
+                    OutlinedTextField(value = editReason, onValueChange = { editReason = it }, label = { Text(stringResource(R.string.label_motif)) }, modifier = Modifier.fillMaxWidth())
+                    Text("${stringResource(R.string.btn_patient)} : ${editPatient?.let { "${it.firstName} ${it.lastName}" } ?: stringResource(R.string.status_libre)}")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { showEditPatientSelection = true }) { Text("Choisir") }
-                        if (editPatient != null) Button(onClick = { editPatient = null }, colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)) { Text("Libérer") }
+                        Button(onClick = { showEditPatientSelection = true }) { Text(stringResource(R.string.label_choisir)) }
+                        if (editPatient != null) Button(onClick = { editPatient = null }, colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)) { Text(stringResource(R.string.label_liberer)) }
                     }
                 }
             }, confirmButton = {
@@ -245,12 +235,12 @@ fun ConsultationScreen(doctorId: Int) {
                             if (networkManager.updateConsultation(req)) { showEditDialog = false; selectedConsultation = null; refreshData() }
                         }
                     }
-                }) { Text("Enregistrer") }
+                }) { Text(stringResource(R.string.label_enregistrer)) }
             })
         }
 
         if (showEditPatientSelection) {
-            AlertDialog(onDismissRequest = { showEditPatientSelection = false }, title = { Text("Choisir Patient") }, text = {
+            AlertDialog(onDismissRequest = { showEditPatientSelection = false }, title = { Text(stringResource(R.string.label_choisir_patient)) }, text = {
                 LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
                     items(patients) { p -> TextButton(onClick = { editPatient = p; showEditPatientSelection = false }, modifier = Modifier.fillMaxWidth()) { Text("${p.firstName} ${p.lastName}") } }
                 }
@@ -258,7 +248,7 @@ fun ConsultationScreen(doctorId: Int) {
         }
 
         if (showDeleteDialog && selectedConsultation != null) {
-            AlertDialog(onDismissRequest = { showDeleteDialog = false }, title = { Text("Supprimer ?") }, text = { Text("Supprimer le créneau du ${selectedConsultation?.date} à ${selectedConsultation?.hour} ?") }, confirmButton = {
+            AlertDialog(onDismissRequest = { showDeleteDialog = false }, title = { Text(stringResource(R.string.dialog_delete_title)) }, text = { Text("${stringResource(R.string.dialog_delete_confirm)} ${selectedConsultation?.date} à ${selectedConsultation?.hour} ?") }, confirmButton = {
                 Button(colors = ButtonDefaults.buttonColors(containerColor = Color.Red), onClick = {
                     scope.launch {
                         val idToDelete = selectedConsultation?.id
@@ -266,14 +256,14 @@ fun ConsultationScreen(doctorId: Int) {
                             if (networkManager.deleteConsultation(idToDelete)) { showDeleteDialog = false; selectedConsultation = null; refreshData() }
                         }
                     }
-                }) { Text("Supprimer", color = Color.White) }
+                }) { Text(stringResource(R.string.label_supprimer), color = Color.White) }
             })
         }
 
         if (showPatientDialog) {
-            AlertDialog(onDismissRequest = { showPatientDialog = false }, title = { Text("Filtrer Patient") }, text = {
+            AlertDialog(onDismissRequest = { showPatientDialog = false }, title = { Text(stringResource(R.string.label_filtrer_patient)) }, text = {
                 LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
-                    item { TextButton(onClick = { selectedPatient = null; showPatientDialog = false }) { Text("Tous") } }
+                    item { TextButton(onClick = { selectedPatient = null; showPatientDialog = false }) { Text(stringResource(R.string.btn_all)) } }
                     items(patients) { p -> TextButton(onClick = { selectedPatient = p; showPatientDialog = false }) { Text("${p.firstName} ${p.lastName}") } }
                 }
             }, confirmButton = {})
@@ -284,7 +274,7 @@ fun ConsultationScreen(doctorId: Int) {
                 onDismissRequest = { showDetailsDialog = false },
                 title = {
                     Text(
-                        "Détails de la consultation",
+                        stringResource(R.string.dialog_details_title),
                         style = MaterialTheme.typography.headlineSmall,
                         color = Color(0xFF6200EE)
                     )
@@ -293,41 +283,38 @@ fun ConsultationScreen(doctorId: Int) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight(0.6f) // Prend 60% de la hauteur de l'écran
-                            .verticalScroll(rememberScrollState()), // Permet de scroller si le motif est géant
+                            .fillMaxHeight(0.6f)
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // Info Patient
                         Column {
-                            Text("Patient", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
+                            Text(stringResource(R.string.btn_patient), style = MaterialTheme.typography.labelLarge, color = Color.Gray)
                             Text(
-                                text = selectedConsultation?.patient?.let { "${it.firstName} ${it.lastName}" } ?: "LIBRE",
+                                text = selectedConsultation?.patient?.let { "${it.firstName} ${it.lastName}" } ?: stringResource(R.string.status_libre),
                                 style = MaterialTheme.typography.titleLarge
                             )
                         }
 
                         HorizontalDivider(thickness = 0.5.dp)
 
-                        // Date et Heure
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Column {
-                                Text("Date", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
+                                Text(stringResource(R.string.btn_date), style = MaterialTheme.typography.labelLarge, color = Color.Gray)
                                 Text(selectedConsultation?.date?.toString() ?: "N/A")
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text("Heure", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
+                                Text(stringResource(R.string.label_heure), style = MaterialTheme.typography.labelLarge, color = Color.Gray)
                                 Text(selectedConsultation?.hour?.toString() ?: "N/A")
                             }
                         }
 
                         HorizontalDivider(thickness = 0.5.dp)
 
-                        // Motif (Le but principal)
                         Column {
-                            Text("Motif complet", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
+                            Text(stringResource(R.string.label_motif_complet), style = MaterialTheme.typography.labelLarge, color = Color.Gray)
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = selectedConsultation?.reason ?: "Aucun motif précisé.",
+                                text = selectedConsultation?.reason ?: stringResource(R.string.label_aucun_motif),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
@@ -335,7 +322,7 @@ fun ConsultationScreen(doctorId: Int) {
                 },
                 confirmButton = {
                     TextButton(onClick = { showDetailsDialog = false }) {
-                        Text("Fermer")
+                        Text(stringResource(R.string.label_fermer))
                     }
                 }
             )
@@ -370,18 +357,17 @@ fun ConsultationCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = consultation.patient?.let { "${it.firstName} ${it.lastName}" } ?: "LIBRE",
+                    text = consultation.patient?.let { "${it.firstName} ${it.lastName}" } ?: stringResource(R.string.status_libre),
                     style = MaterialTheme.typography.titleMedium,
                     color = if (consultation.patient == null) Color(0xFF2E7D32) else Color.Black
                 )
 
-                // --- MODIFICATION ICI ---
                 Text(
-                    text = "Motif : ${consultation.reason ?: "N/A"}",
+                    text = "${stringResource(R.string.label_motif)} : ${consultation.reason ?: "N/A"}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray,
-                    maxLines = 1, // Limite à une seule ligne
-                    overflow = TextOverflow.Ellipsis // Ajoute les "..." si le texte dépasse
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Column(horizontalAlignment = Alignment.End) {

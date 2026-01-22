@@ -19,15 +19,12 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             NavHost(navController = navController, startDestination = "login") {
-                // Écran de Login
                 composable("login") {
                     LoginScreen(onLoginSuccess = { doctorId ->
-                        // On navigue vers les consultations en passant l'ID dans l'URL
                         navController.navigate("consultations/$doctorId")
                     })
                 }
 
-                // Écran des Consultations avec paramètre ID
                 composable(
                     route = "consultations/{doctorId}",
                     arguments = listOf(navArgument("doctorId") { type = NavType.IntType })

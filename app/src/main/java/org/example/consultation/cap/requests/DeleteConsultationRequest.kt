@@ -1,6 +1,6 @@
 package org.example.consultation.cap.requests
 import java.io.Serializable
 
-class DeleteConsultationRequest(val consultationId: Int) : Serializable { // <-- consultationId
+class DeleteConsultationRequest(val consultationId: Int) : Serializable {
     companion object { private const val serialVersionUID = 1L }
 }
