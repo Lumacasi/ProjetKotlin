@@ -41,16 +41,14 @@ class NetworkManager {
         }
     }
 
-    // MODIFICATION ICI : On accepte l'objet SearchConsultationsRequest complet
     suspend fun getConsultations(request: SearchConsultationsRequest): List<Consultation> {
         return withContext(Dispatchers.IO) {
             var socket: Socket? = null
             try {
                 socket = Socket(Constants.SERVER_IP, Constants.SERVER_PORT)
                 val oos = ObjectOutputStream(socket.getOutputStream())
-                oos.flush() // Important de flush après création
+                oos.flush()
 
-                // Envoi de l'objet de requête tel quel
                 oos.writeObject(request)
                 oos.flush()
 
@@ -75,7 +73,6 @@ class NetworkManager {
                 val oos = ObjectOutputStream(socket.getOutputStream())
                 oos.flush()
 
-                // Envoi de la requête GetPatientsRequest (pense à l'importer)
                 oos.writeObject(org.example.consultation.cap.requests.GetPatientsRequest())
                 oos.flush()
 
@@ -103,7 +100,6 @@ class NetworkManager {
                 oos.flush()
 
                 val ois = ObjectInputStream(socket.getInputStream())
-                // On lit l'objet réponse complet envoyé par le CapProtocole.java
                 ois.readObject() as? AddConsultationResponse
             } catch (e: Exception) {
                 Log.e("NETWORK", "Erreur AddConsultation: ${e.message}")
@@ -122,11 +118,9 @@ class NetworkManager {
                 val oos = ObjectOutputStream(socket.getOutputStream())
                 oos.flush()
 
-                // On envoie la requête (Vérifie bien que le nom correspond : DeleteConsultationRequest)
                 oos.writeObject(org.example.consultation.cap.requests.DeleteConsultationRequest(id))
                 oos.flush()
 
-                // LECTURE DE LA RÉPONSE (Indispensable !)
                 val ois = ObjectInputStream(socket.getInputStream())
                 val response = ois.readObject() as? org.example.consultation.cap.responses.DeleteConsultationResponse
 

@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import com.example.projetkotlin.R
 import com.example.projetkotlin.data.network.NetworkManager
 import kotlinx.coroutines.launch
-import android.app.Activity
 import com.example.projetkotlin.ui.consultation.ConsultationActivity
 
 @Composable
@@ -23,7 +22,6 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
     val scope = rememberCoroutineScope()
     val networkManager = remember { NetworkManager() }
 
-    // États du formulaire
     var username by remember { mutableStateOf("Alice") }
     var password by remember { mutableStateOf("Dupont") }
     var statusMessage by remember { mutableStateOf("") }
@@ -48,7 +46,6 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Champ Utilisateur (Prénom pour ton test SQL)
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
@@ -60,7 +57,6 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Champ Mot de passe (Nom pour ton test SQL)
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -73,7 +69,6 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Bouton de connexion
             Button(
                 onClick = {
                     if (username.isBlank() || password.isBlank()) {
@@ -91,12 +86,10 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
                             isLoading = false
                             if (response != null && response.success) {
                                 val intent = Intent(context, ConsultationActivity::class.java).apply {
-                                    // Extraction sécurisée de l'ID du docteur
                                     val id = response.doctor?.id ?: -1
                                     putExtra("DOCTOR_ID", id)
                                 }
                                 context.startActivity(intent)
-                                // Pas de finish() pour garder le retour arrière fonctionnel
                             } else {
                                 statusMessage = context.getString(R.string.login_error)
                             }
@@ -123,7 +116,6 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Message de statut (Erreur ou Succès)
             Text(
                 text = statusMessage,
                 color = if (statusMessage.contains("réussie") || statusMessage.contains("successful"))
